@@ -10,17 +10,17 @@ variable "vpc_cidr_block" {
 
 variable "web_pub_sub_cidr" {
   type = list(string)
-  default = [ "10.0.1.0/16", "10.0.2.0/16" ]
+  default = [ "10.0.1.0/24", "10.0.2.0/24" ]
 }
 
 variable "app_priv_sub_cidr" {
   type = list(string)
-  default = [ "10.0.3.0/16", "10.0.4.0/16" ]
+  default = [ "10.0.3.0/24", "10.0.4.0/24" ]
 }
 
 variable "db_priv_sub_cidr" {
   type = list(string)
-  default = [ "10.0.5.0/16", "10.0.6.0/16" ]
+  default = [ "10.0.5.0/24", "10.0.6.0/24" ]
 }
 
 variable "pub_sub_az" {

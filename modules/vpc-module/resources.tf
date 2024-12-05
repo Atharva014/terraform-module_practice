@@ -7,7 +7,7 @@ resource "aws_vpc" "atharva_vpc" {
 }
 
 # Internet Gateway creation
-resource "aws_internet_gateway" "atharva_igw" {
+resource "aws_internet_gateway" "atharva_vpc_igw" {
   vpc_id = aws_vpc.atharva_vpc.id
   tags = {
     Name = "atharva-vpc-igw"
@@ -67,37 +67,58 @@ resource "aws_nat_gateway" "atharva_vpc_web_ngw" {
 }
 
 # Route table creation
-resource "aws_route_table" "atharva_vpc_public_rt" {
+resource "aws_route_table" "atharva_vpc_web_public_rt" {
   vpc_id = aws_vpc.atharva_vpc.id
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.atharva_vpc_igw.id
   }
   tags = {
-    Name = "atharva-vpc-public-rt"
+    Name = "atharva-vpc-web-public-rt"
   }
 }
 
-resource "aws_route_table" "atharva_vpc_private_rt" {
+resource "aws_route_table" "atharva_vpc_app_private_rt" {
+  count = var.sub_count
   vpc_id = aws_vpc.atharva_vpc.id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.atharva_vpc_ngw.id
+    gateway_id = aws_nat_gateway.atharva_vpc_web_ngw[count.index].id
   }
   tags = {
-    Name = "atharva-vpc-private-rt"
+    Name = "atharva-vpc-app-private-rt-${count.index}"
+  }
+}
+
+resource "aws_route_table" "atharva_vpc_db_private_rt" {
+  count = var.sub_count
+  vpc_id = aws_vpc.atharva_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.atharva_vpc_web_ngw[count.index].id
+  }
+  tags = {
+    Name = "atharva-vpc-db-private-rt-${count.index}"
   }
 }
 
 # Route table association
-resource "aws_route_table_association" "pub_rt_association" {
-  subnet_id = aws_subnet.atharva_vpc_public_sub.id
-  route_table_id = aws_route_table.atharva_vpc_public_rt.id
+resource "aws_route_table_association" "web_pub_rt_association" {
+  count = var.sub_count
+  subnet_id = aws_subnet.atharva_vpc_web_public_sub[count.index].id
+  route_table_id = aws_route_table.atharva_vpc_web_public_rt.id
 }
 
-resource "aws_route_table_association" "pri_rt_association" {
-  subnet_id = aws_subnet.atharva_vpc_private_sub.id
-  route_table_id = aws_route_table.atharva_vpc_private_rt.id
+resource "aws_route_table_association" "app_pri_rt_association" {
+  count = var.sub_count
+  subnet_id = aws_subnet.atharva_vpc_app_private_sub[count.index].id
+  route_table_id = aws_route_table.atharva_vpc_app_private_rt[count.index].id
+}
+
+resource "aws_route_table_association" "db_pri_rt_association" {
+  count = var.sub_count
+  subnet_id = aws_subnet.atharva_vpc_db_private_sub[count.index].id
+  route_table_id = aws_route_table.atharva_vpc_db_private_rt[count.index].id
 }
 
 # Security Group creation
