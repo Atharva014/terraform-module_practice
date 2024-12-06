@@ -33,11 +33,6 @@ variable "priv_sub_az" {
   default = [ "ap-south-1a", "ap-south-1b" ]
 }
 
-variable "sub_count" {
-  type = number
-  default = 2  
-}
-
 variable "vpc_ami" {
   type = string
   default = "ami-0614680123427b75e"

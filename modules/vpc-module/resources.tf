@@ -20,8 +20,8 @@ resource "aws_subnet" "atharva_vpc_web_public_sub" {
   vpc_id = aws_vpc.atharva_vpc.id
   cidr_block = var.web_pub_sub_cidr[count.index]
   availability_zone = var.pub_sub_az[count.index]
-  map_public_ip_on_launch = var.public_ip_on_launch
-  enable_resource_name_dns_a_record_on_launch = var.resource_name_dns_a_record_on_launch
+  map_public_ip_on_launch = true
+  enable_resource_name_dns_a_record_on_launch = true
   tags = {
     Name = "atharva-vpc-web-public-sub-${count.index}"
   }
@@ -32,7 +32,7 @@ resource "aws_subnet" "atharva_vpc_app_private_sub" {
   vpc_id = aws_vpc.atharva_vpc.id
   cidr_block = var.app_priv_sub_cidr[count.index]
   availability_zone = var.priv_sub_az[count.index]
-  enable_resource_name_dns_a_record_on_launch = var.resource_name_dns_a_record_on_launch
+  enable_resource_name_dns_a_record_on_launch = true
   tags = {
     Name = "atharva-vpc-app-private-sub-${count.index}"
   }
@@ -43,7 +43,7 @@ resource "aws_subnet" "atharva_vpc_db_private_sub" {
   vpc_id = aws_vpc.atharva_vpc.id
   cidr_block = var.db_priv_sub_cidr[count.index]
   availability_zone = var.priv_sub_az[count.index]
-  enable_resource_name_dns_a_record_on_launch = var.resource_name_dns_a_record_on_launch
+  enable_resource_name_dns_a_record_on_launch = true
   tags = {
     Name = "atharva-vpc-db-private-sub-${count.index}"
   }
@@ -144,4 +144,59 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic" {
   security_group_id = aws_security_group.atharva_vpc_sg.id
   cidr_ipv4 = "0.0.0.0/0"
   ip_protocol = "-1"
+}
+
+# Instance creation
+resource "aws_instance" "public_web_srv" {
+  count = var.sub_count
+  ami = var.vpc_ami
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.atharva_vpc_web_public_sub[count.index].id
+  key_name = var.key_pair
+  tags = {
+    Name = "linux-web-srv-${count.index + 1}"
+  }
+  vpc_security_group_ids = [
+    aws_security_group.atharva_vpc_sg.id
+  ]
+  root_block_device {
+    volume_size = var.root_volume_size
+    volume_type = "gp2"
+  }
+}
+
+resource "aws_instance" "private_app_srv" {
+  count = var.sub_count
+  ami = var.vpc_ami
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.atharva_vpc_app_private_sub[count.index].id
+  key_name = var.key_pair
+  tags = {
+    Name = "linux-app-srv-${count.index + 1}"
+  }
+  vpc_security_group_ids = [
+    aws_security_group.atharva_vpc_sg.id
+  ]
+  root_block_device {
+    volume_size = var.root_volume_size
+    volume_type = "gp2"
+  }
+}
+
+resource "aws_instance" "private_db_srv" {
+  count = var.sub_count
+  ami = var.vpc_ami
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.atharva_vpc_db_private_sub[count.index].id
+  key_name = var.key_pair
+  tags = {
+    Name = "linux-db-srv-${count.index + 1}"
+  }
+  vpc_security_group_ids = [
+    aws_security_group.atharva_vpc_sg.id
+  ]
+  root_block_device {
+    volume_size = var.root_volume_size
+    volume_type = "gp2"
+  }
 }
